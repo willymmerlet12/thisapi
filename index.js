@@ -90,7 +90,6 @@ app.post("/questions/:id/responses", async (req, res) => {
     if (optionIndex !== -1) {
       question.responses[optionIndex]++;
       await question.save();
-      console.log(`Question ${questionId} updated with response: ${response}`);
       res.sendStatus(200);
     } else {
       // Response was not found in the options array
