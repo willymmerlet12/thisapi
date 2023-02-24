@@ -70,6 +70,10 @@ app.get("/questions/:id/percentage", async (req, res) => {
   res.json({ optionA: percentageA, optionB: percentageB });
 });
 
+app.get("/", (req, res) => {
+  res.json("Hello");
+});
+
 app.all("*", (req, res) => {
   res.status(404).json({ message: error.message });
 });
