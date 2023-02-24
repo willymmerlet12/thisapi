@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 const PORT = process.env.PORT || 8080;
 
 // Connect to MongoDB
+mongoose.set("strictQuery", false);
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -80,5 +81,5 @@ app.all("*", (req, res) => {
 
 // Start the server
 app.listen(process.env.PORT || 8080, () => {
-  console.log("Server listening on port 3000");
+  console.log(`Server listening on port ${PORT}`);
 });
