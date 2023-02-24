@@ -21,6 +21,33 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 let questions = [];
 
+//Endpoint to get random question
+app.get("/questions/random", async (req, res) => {
+  try {
+    const count = await Question.countDocuments();
+    const random = Math.floor(Math.random() * count);
+    const question = await Question.findOne().skip(random);
+    if (!question) {
+      return res.status(404).send({ error: "No questions found." });
+    }
+    res.send(question);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to retrieve question." });
+  }
+});
+
+//Endpoint to get questions
+app.get("/questions", async (req, res) => {
+  try {
+    const questions = await Question.find();
+    res.status(200).send(questions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to retrieve questions." });
+  }
+});
+
 // Endpoint for creating a new question
 app.post("/questions", async (req, res) => {
   const { question, options } = req.body;
@@ -44,31 +71,62 @@ app.post("/questions/:id/responses", async (req, res) => {
   const questionId = req.params.id;
   const response = req.body.response;
 
-  // Update the question's responses in the database
-  const question = await Question.findById(questionId);
-  question.responses[response]++;
-  await question.save();
+  // Find the question in the database
+  try {
+    const question = await Question.findById(questionId);
+    if (!question) {
+      return res.status(404).send({ error: "Question not found." });
+    }
 
-  res.sendStatus(200);
+    // Check if the response is a valid option
+    if (!question.options.includes(response)) {
+      return res.status(400).send({ error: "Invalid response option." });
+    }
+
+    // Find the index of the response in the options array
+    const optionIndex = question.options.indexOf(response);
+
+    // If the response was found, update the corresponding response count and save to the database
+    if (optionIndex !== -1) {
+      question.responses[optionIndex]++;
+      await question.save();
+      console.log(`Question ${questionId} updated with response: ${response}`);
+      res.sendStatus(200);
+    } else {
+      // Response was not found in the options array
+      return res.status(400).send({ error: "Invalid response option." });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ error: "Failed to update response" });
+  }
 });
 
 app.get("/questions/:id/percentage", async (req, res) => {
   const questionId = req.params.id;
 
-  // Query the database for the number of responses for each option
+  // Query the database for the question
   const question = await Question.findById(questionId);
-  const totalResponses =
-    question.responses.optionA + question.responses.optionB;
-  const percentageA =
-    totalResponses > 0
-      ? (question.responses.optionA / totalResponses) * 100
-      : 0;
-  const percentageB =
-    totalResponses > 0
-      ? (question.responses.optionB / totalResponses) * 100
-      : 0;
 
-  res.json({ optionA: percentageA, optionB: percentageB });
+  if (!question) {
+    return res.status(404).send({ error: "Question not found." });
+  }
+
+  // Calculate the total number of responses for all options
+  const totalResponses = Object.values(question.responses).reduce(
+    (total, count) => total + count,
+    0
+  );
+
+  // Calculate the percentage for each option
+  const percentages = {};
+  for (let option in question.responses) {
+    const count = question.responses[option];
+    const percentage = totalResponses > 0 ? (count / totalResponses) * 100 : 0;
+    percentages[option] = percentage;
+  }
+
+  res.json(percentages);
 });
 
 app.get("/", (req, res) => {
