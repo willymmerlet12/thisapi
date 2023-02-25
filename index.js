@@ -67,7 +67,7 @@ app.get("/questions/goofy/random", async (req, res) => {
   }
 });
 
-app.get("/questions/goofy/naughty", async (req, res) => {
+app.get("/questions/naughty/random", async (req, res) => {
   try {
     const count = await Question.countDocuments();
     const random = Math.floor(Math.random() * count);
@@ -84,6 +84,33 @@ app.get("/questions/goofy/naughty", async (req, res) => {
 
 //Endpoint to get questions
 app.get("/questions", async (req, res) => {
+  try {
+    const questions = await Question.find();
+    res.status(200).send(questions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to retrieve questions." });
+  }
+});
+app.get("/questions/naughty", async (req, res) => {
+  try {
+    const questions = await Question.find();
+    res.status(200).send(questions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to retrieve questions." });
+  }
+});
+app.get("/questions/goofy", async (req, res) => {
+  try {
+    const questions = await Question.find();
+    res.status(200).send(questions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to retrieve questions." });
+  }
+});
+app.get("/questions/controversial", async (req, res) => {
   try {
     const questions = await Question.find();
     res.status(200).send(questions);
