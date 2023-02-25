@@ -37,6 +37,51 @@ app.get("/questions/random", async (req, res) => {
   }
 });
 
+app.get("/questions/controversial/random", async (req, res) => {
+  try {
+    const count = await Question.countDocuments();
+    const random = Math.floor(Math.random() * count);
+    const question = await Question.findOne().skip(random);
+    if (!question) {
+      return res.status(404).send({ error: "No questions found." });
+    }
+    res.send(question);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to retrieve question." });
+  }
+});
+
+app.get("/questions/goofy/random", async (req, res) => {
+  try {
+    const count = await Question.countDocuments();
+    const random = Math.floor(Math.random() * count);
+    const question = await Question.findOne().skip(random);
+    if (!question) {
+      return res.status(404).send({ error: "No questions found." });
+    }
+    res.send(question);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to retrieve question." });
+  }
+});
+
+app.get("/questions/goofy/naughty", async (req, res) => {
+  try {
+    const count = await Question.countDocuments();
+    const random = Math.floor(Math.random() * count);
+    const question = await Question.findOne().skip(random);
+    if (!question) {
+      return res.status(404).send({ error: "No questions found." });
+    }
+    res.send(question);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to retrieve question." });
+  }
+});
+
 //Endpoint to get questions
 app.get("/questions", async (req, res) => {
   try {
@@ -45,6 +90,57 @@ app.get("/questions", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: "Failed to retrieve questions." });
+  }
+});
+
+app.post("/questions/controversial", async (req, res) => {
+  const { question, options } = req.body;
+
+  if (!question || !options) {
+    return res
+      .status(400)
+      .send({ error: "Question and options are required." });
+  }
+  try {
+    const newQuestion = await Question.create({ question, options });
+    res.status(201).send(newQuestion);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to create question." });
+  }
+});
+
+app.post("/questions/goofy", async (req, res) => {
+  const { question, options } = req.body;
+
+  if (!question || !options) {
+    return res
+      .status(400)
+      .send({ error: "Question and options are required." });
+  }
+  try {
+    const newQuestion = await Question.create({ question, options });
+    res.status(201).send(newQuestion);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to create question." });
+  }
+});
+
+app.post("/questions/naughty", async (req, res) => {
+  const { question, options } = req.body;
+
+  if (!question || !options) {
+    return res
+      .status(400)
+      .send({ error: "Question and options are required." });
+  }
+  try {
+    const newQuestion = await Question.create({ question, options });
+    res.status(201).send(newQuestion);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to create question." });
   }
 });
 
@@ -67,6 +163,41 @@ app.post("/questions", async (req, res) => {
   }
 });
 // Define API endpoints
+app.post("/questions/:id/responses", async (req, res) => {
+  const questionId = req.params.id;
+  const response = req.body.response;
+
+  // Find the question in the database
+  try {
+    const question = await Question.findById(questionId);
+    if (!question) {
+      return res.status(404).send({ error: "Question not found." });
+    }
+
+    // Check if the response is a valid option
+    if (!question.options.includes(response)) {
+      return res.status(400).send({ error: "Invalid response option." });
+    }
+
+    // Find the index of the response in the options array
+    const optionIndex = question.options.indexOf(response);
+
+    // If the response was found, update the corresponding response count and save to the database
+    if (optionIndex !== -1) {
+      question.responses[optionIndex]++;
+      await question.save();
+      console.log(`Question ${questionId} updated with response: ${response}`);
+      res.sendStatus(200);
+    } else {
+      // Response was not found in the options array
+      return res.status(400).send({ error: "Invalid response option." });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ error: "Failed to update response" });
+  }
+});
+
 app.post("/questions/:id/responses", async (req, res) => {
   const questionId = req.params.id;
   const response = req.body.response;
